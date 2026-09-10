@@ -4,7 +4,7 @@
   var pathParts = decodeURIComponent(location.pathname).split("/").filter(Boolean);
   var lastPart = pathParts[pathParts.length - 1] || "";
   var projectFolder = /\.html?$/i.test(lastPart) ? (pathParts[pathParts.length - 2] || "") : lastPart;
-  var projectKey = projectFolder.replace(/^TIAN-/i, "").toLowerCase();
+  var projectKey = document.body.dataset.projectKey || projectFolder.replace(/^TIAN-/i, "").toLowerCase();
   var configs = {
     "detection-brand": { pending: true },
     "hangzhou-linxin": {
@@ -22,7 +22,45 @@
     "yanbowen-noodles": {
       assets: ["01_品牌主视觉.png", "02_LOGO释义.png", "03_标准字体.png", "04_品牌色彩.png", "05_标志组合.png", "06_辅助图形.png", "07_品牌应用展示.png", "08_品牌理念场景.png", "09_品牌收尾视觉.png"]
     },
-    "applied-project-07": { pending: true },
+    "applied-project-07": {
+      chapters: [
+        {
+          key: "cosmic-scale",
+          title: ["宇宙尺度", "宇宙尺度", "Cosmic Scale"],
+          subtitle: ["把遥远之物重新放回星空：从太阳系位置进入轨道、族群、光谱与单体档案。", "把遙遠之物重新放回星空：從太陽系位置進入軌道、族群、光譜與單體檔案。", "Returning distant objects to the sky through orbital position, families, spectra, and individual archives."],
+          assets: [
+            { file: "celestial-cosmic-inner-system.png", label: ["木星以内天体环", "木星以內天體環", "Inner Solar System"] },
+            { file: "celestial-cosmic-trajectories.png", label: ["轨道分析", "軌道分析", "Orbit Analysis"] },
+            { file: "celestial-cosmic-families.png", label: ["族群结构", "族群結構", "Group Structure"] },
+            { file: "celestial-cosmic-spectrum.png", label: ["光谱空间", "光譜空間", "Spectrum Space"] },
+            { file: "celestial-cosmic-giant-archive.png", label: ["单一天体档案", "單一天體檔案", "Object Archive"] }
+          ]
+        },
+        {
+          key: "earth-scale",
+          title: ["地球尺度", "地球尺度", "Earth Scale"],
+          subtitle: ["陨石不是地图上的点，而是由坠落、发现、时间、地点、质量与记录共同构成的地表档案。", "隕石不是地圖上的點，而是由墜落、發現、時間、地點、質量與記錄共同構成的地表檔案。", "Meteorites are more than points on a map: they form a terrestrial archive of falls, finds, time, place, mass, and human records."],
+          assets: [
+            { file: "celestial-earth-major-meteorites.png", label: ["大型陨石与地表档案", "大型隕石與地表檔案", "Major Meteorite Records"] },
+            { file: "celestial-earth-landings.png", label: ["球体投影与陨石记录", "球體投影與隕石記錄", "Globe Projection"] },
+            { file: "celestial-earth-fall-record.png", label: ["平面投影与坠落记录", "平面投影與墜落記錄", "Flat Projection"] },
+            { file: "celestial-earth-fall-animation.png", label: ["动态坠落与图表解读", "動態墜落與圖表解讀", "Fall Trace & Visual Guide"] },
+            { file: "celestial-earth-impact-structures.png", label: ["记录时间累积", "記錄時間累積", "Timeline Accumulation"] },
+            { file: "celestial-earth-record-table.png", label: ["多维数据分布", "多維資料分布", "Multidimensional Distribution"] }
+          ]
+        },
+        {
+          key: "material-scale",
+          title: ["物质尺度", "物質尺度", "Material Scale"],
+          subtitle: ["把陨石继续放大直到看见晶体，以实时渲染连接矿物色相、晶系与光学模拟。", "把隕石繼續放大直到看見晶體，以即時渲染連接礦物色相、晶系與光學模擬。", "Magnifying meteorites until crystals emerge, connecting mineral color, crystal systems, and optical simulation through real-time rendering."],
+          assets: [
+            { file: "celestial-material-crystal-02.png", label: ["等轴晶体样本", "等軸晶體樣本", "Isometric Crystal Sample"] },
+            { file: "celestial-material-crystal-03.png", label: ["六方晶体样本", "六方晶體樣本", "Hexagonal Crystal Sample"] },
+            { file: "celestial-material-crystal-01.png", label: ["四方晶体与光学色散", "四方晶體與光學色散", "Tetragonal Crystal & Dispersion"] }
+          ]
+        }
+      ]
+    },
     "applied-project-08": { pending: true },
     "portfolio-project-17": { pending: true }
   };
@@ -54,20 +92,23 @@
   }
 
   function makeAssetFigure(asset, index) {
+    var record = typeof asset === "string" ? { file: asset } : asset;
+    var filename = record.file;
+    var labels = record.label || [assetLabel(filename, index), assetLabel(filename, index), assetLabel(filename, index)];
     var figure = document.createElement("figure");
     figure.className = "gallery-item compact-detail-figure";
     var button = document.createElement("button");
     button.type = "button";
-    button.setAttribute("data-lightbox", "assets/" + asset);
+    button.setAttribute("data-lightbox", "assets/" + filename);
     var image = document.createElement("img");
-    image.src = "assets/" + asset;
-    image.alt = assetLabel(asset, index);
+    image.src = "assets/" + filename;
+    image.alt = labels[0];
     image.loading = "lazy";
     var caption = document.createElement("figcaption");
     var number = document.createElement("span");
     number.textContent = String(index + 1).padStart(2, "0");
     var label = document.createElement("span");
-    label.textContent = assetLabel(asset, index);
+    i18n(label, labels[0], labels[1], labels[2]);
     button.appendChild(image);
     caption.appendChild(number);
     caption.appendChild(label);
@@ -77,7 +118,16 @@
   }
 
   var groups = [];
-  if (assets.length) {
+  if (config.chapters && config.chapters.length) {
+    config.chapters.forEach(function (chapter) {
+      groups.push({
+        key: chapter.key,
+        title: chapter.title,
+        subtitle: chapter.subtitle,
+        items: chapter.assets.map(function (asset, index) { return makeAssetFigure(asset, index); })
+      });
+    });
+  } else if (assets.length) {
     groups.push({
       key: "overview-board",
       title: ["完整视觉总览", "完整視覺總覽", "Complete Visual Overview"],
@@ -164,7 +214,8 @@
     if (firstImage) {
       var previewImage = document.createElement("img");
       previewImage.src = firstImage.getAttribute("src");
-      previewImage.alt = group.title[0];
+      previewImage.alt = "";
+      previewImage.setAttribute("aria-hidden", "true");
       previewImage.loading = "lazy";
       card.appendChild(previewImage);
     } else {
@@ -222,7 +273,17 @@
         var itemLink = document.createElement("a");
         itemLink.href = "#" + figureId;
         var captionLabel = figure.querySelector("figcaption span:last-child");
-        itemLink.textContent = String(itemIndex + 1).padStart(2, "0") + " " + (captionLabel ? captionLabel.textContent.trim() : "DETAIL");
+        var itemNumber = String(itemIndex + 1).padStart(2, "0") + " ";
+        if (captionLabel) {
+          i18n(
+            itemLink,
+            itemNumber + (captionLabel.getAttribute("data-i18n-hans") || captionLabel.textContent.trim()),
+            itemNumber + (captionLabel.getAttribute("data-i18n-hant") || captionLabel.textContent.trim()),
+            itemNumber + (captionLabel.getAttribute("data-i18n-en") || captionLabel.textContent.trim())
+          );
+        } else {
+          i18n(itemLink, itemNumber + "细节", itemNumber + "細節", itemNumber + "Detail");
+        }
         localNav.appendChild(itemLink);
       });
       section.appendChild(localNav);

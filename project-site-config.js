@@ -4,8 +4,17 @@
   var parts = decodeURIComponent(location.pathname).split("/").filter(Boolean);
   var lastPart = parts[parts.length - 1] || "";
   var projectFolder = /\.html?$/i.test(lastPart) ? (parts[parts.length - 2] || "") : lastPart;
-  var projectId = projectFolder.replace(/^TIAN-/i, "").toLowerCase();
+  var projectId = document.body.dataset.projectKey || projectFolder.replace(/^TIAN-/i, "").toLowerCase();
   var dataBase = MAIN_LIVE + "data/";
+  var localTaxonomy = {
+    "applied-project-07": [
+      { hans: "数据可视化", hant: "資料視覺化", en: "Data Visualization" },
+      { hans: "交互设计", hant: "互動設計", en: "Interaction Design" },
+      { hans: "创意编程", hant: "創意程式設計", en: "Creative Coding" },
+      { hans: "WebGPU", hant: "WebGPU", en: "WebGPU" },
+      { hans: "科学档案", hant: "科學檔案", en: "Scientific Archive" }
+    ]
+  };
 
   function loadScript(src) {
     return new Promise(function (resolve, reject) {
@@ -42,15 +51,17 @@
   function renderTaxonomy() {
     if (document.getElementById("projectTaxonomy")) return;
     var item = (window.WORKS || []).find(function (work) { return work.id === projectId; });
-    if (!item) return;
+    var labels = localTaxonomy[projectId] ? localTaxonomy[projectId].slice() : [];
+    if (!item && !labels.length) return;
     var translation = window.WORK_TRANSLATIONS && window.WORK_TRANSLATIONS[projectId];
-    var tagsHans = item.tags || [];
-    var tagsHant = translation && translation["zh-hant"] && translation["zh-hant"].tags || tagsHans;
-    var tagsEn = translation && translation.en && translation.en.tags || tagsHans;
-    var labels = [];
-    (item.directions || []).forEach(function (key) { labels.push(metaLabel("directions", key)); });
-    (item.types || []).forEach(function (key) { labels.push(metaLabel("types", key)); });
-    tagsHans.forEach(function (tag, index) { labels.push({ hans: tag, hant: tagsHant[index] || tag, en: tagsEn[index] || tag }); });
+    if (!labels.length) {
+      var tagsHans = item.tags || [];
+      var tagsHant = translation && translation["zh-hant"] && translation["zh-hant"].tags || tagsHans;
+      var tagsEn = translation && translation.en && translation.en.tags || tagsHans;
+      (item.directions || []).forEach(function (key) { labels.push(metaLabel("directions", key)); });
+      (item.types || []).forEach(function (key) { labels.push(metaLabel("types", key)); });
+      tagsHans.forEach(function (tag, index) { labels.push({ hans: tag, hant: tagsHant[index] || tag, en: tagsEn[index] || tag }); });
+    }
 
     var section = document.createElement("section");
     section.className = "detail-taxonomy";
@@ -91,6 +102,7 @@
     .then(function () { return loadScript(dataBase + "work-detail-links.js"); })
     .then(function () { renderTaxonomy(); updateProjectLinks(); })
     .catch(function () {
+      renderTaxonomy();
       document.querySelectorAll("[data-detail-id]").forEach(function (link) { link.href = MAIN_LIVE + "?from=project#all-works"; });
     });
 }());
