@@ -5,6 +5,13 @@
   var lastPart = parts[parts.length - 1] || "";
   var projectFolder = /\.html?$/i.test(lastPart) ? (parts[parts.length - 2] || "") : lastPart;
   var projectId = document.body.dataset.projectKey || projectFolder.replace(/^TIAN-/i, "").toLowerCase();
+  var localIndex = location.pathname.indexOf("/JiangmingTian_Portfolio_Detail_Pages/");
+  if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) && localIndex !== -1) {
+    MAIN_LIVE = location.origin + location.pathname.slice(0, localIndex) + "/JiangmingTian_Portfolio_Final/";
+    document.querySelectorAll('a[href^="https://tianming332.github.io/JiangmingTian_Portfolio_Final/"]').forEach(function (link) {
+      link.href = MAIN_LIVE + link.href.split("/JiangmingTian_Portfolio_Final/")[1];
+    });
+  }
   var dataBase = MAIN_LIVE + "data/";
   var localTaxonomy = {
     "applied-project-07": [
@@ -29,12 +36,12 @@
   function language() { return window.tjmLanguage ? window.tjmLanguage.current() : "zh-hans"; }
   function localized(record) {
     var current = language();
-    return current === "en" ? record.en : (current === "zh-hant" ? record.hant : record.hans);
+    return current === "en" ? record.en : (current === "ja" ? record.hant : record.hans);
   }
   function setI18n(element, record) {
     element.setAttribute("data-i18n", "");
     element.setAttribute("data-i18n-hans", record.hans);
-    element.setAttribute("data-i18n-hant", record.hant);
+    element.setAttribute("data-i18n-ja", record.hant);
     element.setAttribute("data-i18n-en", record.en);
     element.textContent = localized(record);
   }
@@ -43,7 +50,7 @@
     var fallback = window.PORTFOLIO_META && window.PORTFOLIO_META[group] && window.PORTFOLIO_META[group][key] || key;
     return {
       hans: translated && translated["zh-hans"] || fallback,
-      hant: translated && translated["zh-hant"] || fallback,
+      hant: translated && translated["ja"] || fallback,
       en: translated && translated.en || String(key).toUpperCase()
     };
   }
@@ -56,7 +63,7 @@
     var translation = window.WORK_TRANSLATIONS && window.WORK_TRANSLATIONS[projectId];
     if (!labels.length) {
       var tagsHans = item.tags || [];
-      var tagsHant = translation && translation["zh-hant"] && translation["zh-hant"].tags || tagsHans;
+      var tagsHant = translation && translation["ja"] && translation["ja"].tags || tagsHans;
       var tagsEn = translation && translation.en && translation.en.tags || tagsHans;
       (item.directions || []).forEach(function (key) { labels.push(metaLabel("directions", key)); });
       (item.types || []).forEach(function (key) { labels.push(metaLabel("types", key)); });
@@ -92,7 +99,7 @@
     document.querySelectorAll("[data-detail-id]").forEach(function (link) {
       var id = link.dataset.detailId;
       var record = window.WORK_DETAIL_LINKS && window.WORK_DETAIL_LINKS[id];
-      link.href = record && record.live || (MAIN_LIVE + "?from=project#all-works");
+      link.href = record && (record.local || record.live) || link.href;
     });
   }
 
@@ -103,6 +110,6 @@
     .then(function () { renderTaxonomy(); updateProjectLinks(); })
     .catch(function () {
       renderTaxonomy();
-      document.querySelectorAll("[data-detail-id]").forEach(function (link) { link.href = MAIN_LIVE + "?from=project#all-works"; });
+      /* Keep authored project links usable when the center is offline. */
     });
 }());

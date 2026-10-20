@@ -79,7 +79,7 @@
   function i18n(el, hans, hant, en) {
     el.setAttribute("data-i18n", "");
     el.setAttribute("data-i18n-hans", hans);
-    el.setAttribute("data-i18n-hant", hant);
+    el.setAttribute("data-i18n-ja", hant);
     el.setAttribute("data-i18n-en", en);
     el.textContent = hans;
     return el;
@@ -278,7 +278,7 @@
           i18n(
             itemLink,
             itemNumber + (captionLabel.getAttribute("data-i18n-hans") || captionLabel.textContent.trim()),
-            itemNumber + (captionLabel.getAttribute("data-i18n-hant") || captionLabel.textContent.trim()),
+            itemNumber + (captionLabel.getAttribute("data-i18n-ja") || captionLabel.textContent.trim()),
             itemNumber + (captionLabel.getAttribute("data-i18n-en") || captionLabel.textContent.trim())
           );
         } else {
